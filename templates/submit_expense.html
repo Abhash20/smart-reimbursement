@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="form-card">
+    <h2>Submit New Expense</h2>
+    
+    <!-- OCR Mock Button -->
+    <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border);">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Have a receipt? Use Smart OCR to auto-fill!</p>
+        <button type="button" class="btn-ocr" id="btn-ocr" onclick="simulateOCR()">Scan Receipt with OCR</button>
+        <p id="ocr-status" style="font-size: 0.85rem; color: #10B981; display: none; margin-top: 5px;">OCR Data Extracted Successfully!</p>
+    </div>
+    
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="receipt">Upload Receipt Image (Optional)</label>
+            <input type="file" id="receipt" name="receipt" class="form-control" accept="image/*">
+        </div>
+        <div class="form-group">
+            <label for="amount">Amount</label>
+            <input type="number" step="0.01" id="amount" name="amount" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="currency">Currency</label>
+            <select id="currency" name="currency" class="form-control" required>
+                <!-- Filled via JS, default to base -->
+                <option value="{{ base_curr }}">{{ base_curr }}</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category" class="form-control" required>
+                <option value="Travel">Travel</option>
+                <option value="Food">Food</option>
+                <option value="Supplies">Supplies</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="description">Description</label>
+            <input type="text" id="description" name="description" class="form-control">
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">Submit Expense</button>
+    </form>
+</div>
+
+<script>
+    // Fetch currencies
+    fetch('https://restcountries.com/v3.1/all?fields=currencies')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('currency');
+            const baseCurr = "{{ base_curr }}";
+            select.innerHTML = '';
+            
+            let currencyCodes = new Set();
+            data.forEach(country => {
+                if(country.currencies) {
+                    Object.keys(country.currencies).forEach(code => currencyCodes.add(code));
+                }
+            });
+            
+            Array.from(currencyCodes).sort().forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = code;
+                if(code === baseCurr) opt.selected = true;
+                select.appendChild(opt);
+            });
+        });
+
+    function simulateOCR() {
+        const btn = document.getElementById('btn-ocr');
+        btn.textContent = "Processing...";
+        btn.disabled = true;
+        
+        fetch("{{ url_for('mock_ocr') }}", {
+            method: 'POST'
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('amount').value = data.amount;
+            document.getElementById('currency').value = data.currency;
+            document.getElementById('category').value = data.category;
+            document.getElementById('description').value = data.description;
+            
+            btn.textContent = "Scan Receipt with OCR";
+            btn.disabled = false;
+            document.getElementById('ocr-status').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('ocr-status').style.display = 'none';
+            }, 3000);
+        });
+    }
+</script>
+{% endblock %}

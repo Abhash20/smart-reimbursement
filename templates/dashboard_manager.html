@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Manager Dashboard</h2>
+
+<h3 style="margin-top: 30px;">Action Required: Pending Approvals</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Employee</th>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Amount (Base {{ current_user.company.base_currency }})</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exp in pending_expenses %}
+        <tr>
+            <td>{{ exp.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ exp.employee.username }}</td>
+            <td>{{ exp.category }}</td>
+            <td>{{ exp.description }}</td>
+            <td>{{ "%.2f"|format(exp.amount_base) }}</td>
+            <td>
+                <div style="display: flex; gap: 10px;">
+                    <form action="{{ url_for('approve_expense', expense_id=exp.id, action='approve') }}" method="POST">
+                        <button type="submit" class="btn-primary btn-sm" style="background:#10B981;">Approve</button>
+                    </form>
+                    <form action="{{ url_for('approve_expense', expense_id=exp.id, action='reject') }}" method="POST">
+                        <button type="submit" class="btn-primary btn-sm" style="background:#EF4444;">Reject</button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">No pending approvals require your attention.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3 style="margin-top: 40px;">Team Expenses</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Employee</th>
+            <th>Category</th>
+            <th>Amount (Base Curr)</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exp in all_team_expenses %}
+        <tr>
+            <td>{{ exp.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ exp.employee.username }}</td>
+            <td>{{ exp.category }}</td>
+            <td>{{ current_user.company.base_currency }} {{ "%.2f"|format(exp.amount_base) }}</td>
+            <td><span class="badge badge-{{ exp.status }}">{{ exp.status }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

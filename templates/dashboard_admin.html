@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Dashboard ({{ current_user.role }})</h2>
+<p>Viewing all expenses for {{ current_user.company.name }}. Base currency: <strong>{{ current_user.company.base_currency }}</strong></p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Employee</th>
+            <th>Category</th>
+            <th>Submitted (Curr/Amt)</th>
+            <th>Base Amount</th>
+            <th>Status</th>
+            <th>Override Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exp in expenses %}
+        <tr>
+            <td>{{ exp.date.strftime('%Y-%m-%d') }}</td>
+            <td>{{ exp.employee.username }}</td>
+            <td>{{ exp.category }}</td>
+            <td>{{ exp.currency_submitted }} {{ "%.2f"|format(exp.amount_submitted) }}</td>
+            <td>{{ current_user.company.base_currency }} {{ "%.2f"|format(exp.amount_base) }}</td>
+            <td><span class="badge badge-{{ exp.status }}">{{ exp.status }}</span></td>
+            <td>
+                {% if exp.status == 'Pending' %}
+                <div style="display: flex; gap: 10px;">
+                    <form action="{{ url_for('approve_expense', expense_id=exp.id, action='approve') }}" method="POST">
+                        <input type="hidden" name="force_override" value="1">
+                        <button type="submit" class="btn-primary btn-sm" style="background:#10B981;">Override & Approve</button>
+                    </form>
+                    <form action="{{ url_for('approve_expense', expense_id=exp.id, action='reject') }}" method="POST">
+                        <input type="hidden" name="force_override" value="1">
+                        <button type="submit" class="btn-primary btn-sm" style="background:#EF4444;">Reject</button>
+                    </form>
+                </div>
+                {% else %}
+                - 
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">No expenses in the system.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

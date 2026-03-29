@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="form-card">
+    <h2>Company Signup (Admin)</h2>
+    <p style="color: #6B7280; font-size: 0.9rem; margin-bottom: 20px;">Create your organization and admin account.</p>
+    <form method="POST">
+        <div class="form-group">
+            <label for="company_name">Company Name</label>
+            <input type="text" id="company_name" name="company_name" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="base_currency">Base Currency</label>
+            <select id="base_currency" name="base_currency" class="form-control" required>
+                <option value="">Loading currencies...</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="username">Admin Username</label>
+            <input type="text" id="username" name="username" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Admin Password</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">Create Account</button>
+    </form>
+</div>
+
+<script>
+    // Fetch countries to get currencies
+    fetch('https://restcountries.com/v3.1/all?fields=currencies')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('base_currency');
+            select.innerHTML = '<option value="">Select Company Default Currency</option>';
+            
+            let currencyCodes = new Set();
+            data.forEach(country => {
+                if(country.currencies) {
+                    Object.keys(country.currencies).forEach(code => currencyCodes.add(code));
+                }
+            });
+            
+            Array.from(currencyCodes).sort().forEach(code => {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = code;
+                select.appendChild(opt);
+            });
+        })
+        .catch(err => {
+            console.error('Fail fetching restcountries', err);
+            document.getElementById('base_currency').innerHTML = '<option value="USD">USD</option><option value="EUR">EUR</option><option value="INR">INR</option>';
+        });
+</script>
+{% endblock %}

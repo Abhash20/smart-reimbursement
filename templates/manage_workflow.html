@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Approval Workflow Configuration</h2>
+<div class="form-card" style="max-width: 600px; margin: 20px 0;">
+    <h3>Add New Sequential Rule</h3>
+    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Note: Step 0 is implicitly reserved for the Employee's Direct Manager.</p>
+    <form method="POST">
+        <div class="form-group">
+            <label for="sequence_step">Sequence Step Number (e.g. 1, 2, 3)</label>
+            <input type="number" id="sequence_step" name="sequence_step" class="form-control" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="approver_role">Required Approver Role</label>
+            <select id="approver_role" name="approver_role" class="form-control" required>
+                <option value="Finance">Finance</option>
+                <option value="CTO">CTO</option>
+                <option value="Manager">Manager</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="percentage_required">Percentage Required (0-100%)</label>
+            <input type="number" id="percentage_required" name="percentage_required" class="form-control" min="0" max="100" value="0">
+            <small style="color: var(--text-muted);">Set to 0 if ONLY ONE person from this role needs to approve. Set to 60 for the 60% rule.</small>
+        </div>
+        <button type="submit" class="btn-primary" style="width: 100%;">Create Rule</button>
+    </form>
+</div>
+
+<h3>Current Rules</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Step</th>
+            <th>Role Required</th>
+            <th>Required Condition</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in rules %}
+        <tr>
+            <td>Step {{ r.sequence_step }}</td>
+            <td><strong>{{ r.approver_role }}</strong></td>
+            <td>{% if r.percentage_required > 0 %}{{ r.percentage_required }}% of all {{ r.approver_role }} users{% else %}Any 1 {{ r.approver_role }} user{% endif %}</td>
+            <td>
+                <form action="{{ url_for('delete_rule', rule_id=r.id) }}" method="POST">
+                    <button type="submit" class="btn-primary btn-sm" style="background:#EF4444;">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">No rules created yet. Expenses will auto-approve after manager review.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
